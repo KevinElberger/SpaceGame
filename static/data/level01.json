@@ -1,0 +1,11 @@
+{
+    "hero": {"x": 60, "y": 1700},
+    "platforms": [
+        {"image": "ground", "x": 50, "y": 1900},
+        {"image": "block1x1", "x": 0, "y": 1878},
+        {"image": "block1x1", "x": 0, "y": 1710},
+        {"image": "block3x1", "x": 42, "y": 1878},
+        {"image": "block3x1", "x": 168, "y": 1878},
+        {"image": "block1x3", "x": 0, "y": 1752}
+    ]
+}
