@@ -64,6 +64,7 @@ class GameState extends Phaser.State {
 	}
 
 	update() {
+		this.chaseHero(); 		
 		this.lightSprite.reset(this.game.camera.x, this.game.camera.y);
 		this.game.world.bringToTop(this.hero);
 		this.updateShadowTexture();
@@ -80,6 +81,24 @@ class GameState extends Phaser.State {
 			this.hero.jump();
 			this.hero.jumpCount++;
 		}
+	}
+
+	chaseHero() {
+		this.robot.forEach(function(robot) {
+			if (robot.dying) {
+				return;
+			}
+			if (Math.round(robot.y) === Math.round(this.hero.y)) {
+				if (Math.round(this.hero.x) > Math.round(robot.x)) {
+					robot.animations.play('right');
+					robot.body.velocity.x = 75;
+				} else {
+					robot.animations.play('left');
+					robot.body.velocity.x = -75;
+				}
+				robot.chasing = true;
+			}
+		}, this);
 	}
 
 	createBullets() {
@@ -305,7 +324,6 @@ class GameState extends Phaser.State {
 		var platform1 = new Platform(this.game, 490, 278);
 		this.platforms.add(platform1);
 		let tween = this.game.add.tween(platform1.body).to({x: platform1.body.x+110}, 3000, Phaser.Easing.Out, true,0,loops,true).loop(true);
-		this.platforms.fixedToCamera = false;
 	}
 
 	_spawnEnemies() {

@@ -1,4 +1,4 @@
-import Hero from 'states/game'
+import GameState from 'states/game'
 
 function Robot(game, x, y) {
 	Phaser.Sprite.call(this, game, x, y, 'robot');
@@ -39,18 +39,6 @@ Robot.prototype.update = function() {
 		this.scale.x = 1;
 		this.body.velocity.x = 40;
 	}
-
-	// TODO: Need to find a way to reference the Hero's x,y coordinates
-	/* if (Math. round(this.y) === Math.round(this.game.hero.y)) {
-	 	if (Math.round(GameState.hero.x) > Math.round(this.x)) {
-	 		this.animations.play('right');
-	 		this.body.velocity.x = 75;
-	 	} else {
-	 		this.animations.play('left');
-	 		this.body.velocity.x = -75;
-	 	}
-	 	chasing = true;
-	   } */
 
 	if (!chasing) {
 		if (this.body.velocity.x > 0) {

@@ -29,6 +29,7 @@ function Platform(game, x, y) {
 	this.body.collideWorldBounds = true;
 	this.body.allowGravity = false;
 	this.body.immovable = true;
+	this.body.moves = true;
 }
 
 Platform.prototype = Object.create(Phaser.Sprite.prototype);
