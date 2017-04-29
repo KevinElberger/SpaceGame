@@ -1,5 +1,3 @@
-import GameState from 'states/game'
-
 function Robot(game, x, y) {
 	Phaser.Sprite.call(this, game, x, y, 'robot');
 	this.game.physics.enable(this, Phaser.Physics.ARCADE);

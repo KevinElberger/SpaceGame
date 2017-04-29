@@ -2,7 +2,7 @@ import Hero from 'objects/Hero'
 import Robot from 'objects/Robot'
 import {Star, Chest, Platform, Door, Item} from 'objects/Items'
 
-class GameState extends Phaser.State {
+class Game extends Phaser.State {
 
 	constructor() {
 		super(500, 400, Phaser.AUTO, 'content', null);
@@ -351,4 +351,4 @@ class GameState extends Phaser.State {
 
 }
 
-export default GameState;
+export default Game;
