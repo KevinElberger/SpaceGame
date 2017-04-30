@@ -242,7 +242,11 @@ class Game extends Phaser.State {
 			}
 		});
 
-		this.game.physics.arcade.collide(this.hero, this.platforms);
+		this.game.physics.arcade.collide(this.hero, this.platforms, function(hero, platform) {
+			if (hero.body.touching.down || hero.body.blocked.down) {
+				hero.body.x = platform.body.x;
+			}
+		});
 
 		this.game.physics.arcade.collide(this.hero, this.robot, function(hero, robot) {
 			hero.hit(robot);
@@ -348,7 +352,6 @@ class Game extends Phaser.State {
 		this.items = this.game.add.group();
 		this.items.add(new Item(this.game, 230, 120, 'jetpack'));
 	}
-
 }
 
 export default Game;

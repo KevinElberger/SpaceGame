@@ -75,7 +75,7 @@ Hero.prototype.update = function () {
 		this.body.velocity.y = 0;
 		this.body.allowGravity = false;
 		this.animations.play("death");
-	}
+	}   
 
 	if (this.body.touching.down || this.body.blocked.down) {
 		this.jumpCount = 0;
