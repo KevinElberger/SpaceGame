@@ -3,6 +3,7 @@ import Enemy from 'objects/Enemy'
 class Robot extends Enemy {
 	constructor(game, x, y) {
 		super(game, x, y, 'robot');
+
 		this.game.physics.enable(this, Phaser.Physics.ARCADE);
 		this.anchor.set(0.5, 0.5);
 		this.enableBody = true;

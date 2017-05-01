@@ -1,11 +1,6 @@
 class Enemy extends Phaser.Sprite {
     constructor(game, x, y, sprite) {
         super(game, x, y, sprite)
-    
-    	this.game.physics.enable(this, Phaser.Physics.ARCADE);
-        this.anchor.set(0.5, 0.5);
-        this.enableBody = true;
-
         this.health = 5;
         this.damage = 2;
     }
@@ -15,9 +10,9 @@ class Enemy extends Phaser.Sprite {
 			return;
 		}
 
-		if (bullet.body.velocity.x > 0) {
+		if (bullet.body.velocity.x > 0 && this.body.velocity.x !== 0) {
 			this.body.velocity.x = 500;
-		} else if (bullet.body.velocity.x < 0) {
+		} else if (bullet.body.velocity.x < 0 && this.body.velocity.x !== 0) {
 			this.body.velocity.x = -500;
 		}
 

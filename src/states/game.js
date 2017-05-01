@@ -1,5 +1,6 @@
 import Hero from 'objects/Hero'
 import Robot from 'objects/Robot'
+import WallEye from 'objects/WallEye'
 import {Star, Chest, Platform, Door, Item} from 'objects/Items'
 
 class Game extends Phaser.State {
@@ -22,8 +23,10 @@ class Game extends Phaser.State {
 		this.game.load.spritesheet('chest', 'assets/chest.png', 16, 16, 7);
 		this.load.spritesheet('dude', 'assets/hero.png', 16, 16, 19);
 		this.load.spritesheet('dude_jetpack', 'assets/hero_jet.png', 16, 16, 29);
+		this.game.load.spritesheet('wallEye', 'assets/wallEye.png', 16, 16, 6);
 		this.load.spritesheet('robot', 'assets/robot1.png', 16, 16, 8);
 		this.game.load.image('bullet', 'assets/bullet.png');
+		this.game.load.image('eyeProjectile', 'assets/eyeProjectile.png');
 
 		this.game.stage.backgroundColor = '#FFF';
 	}
@@ -45,7 +48,7 @@ class Game extends Phaser.State {
 
 		this.STAR_LIGHT_RADIUS = 50;
 		this.light = this.game.add.group();
-		this.light.add(new Star(this.game, 134, 262));
+		this.light.add(new Star(this.game, 134, 258));
 
 		this.shadowTexture = this.game.add.bitmapData(this.game.width+10, this.game.height+10);
 		this.lightSprite = this.game.add.image(this.light.x, this.light.y, this.shadowTexture);
@@ -64,13 +67,24 @@ class Game extends Phaser.State {
 	}
 
 	update() {
-		this.chaseHero(); 		
+		this.chaseHero();
+		this.wallEyeFireProjectile(); 		
 		this.lightSprite.reset(this.game.camera.x, this.game.camera.y);
 		this.game.world.bringToTop(this.hero);
 		this.updateShadowTexture();
 		this.updateStarShadowTexture();
 		this._handleCollisions();
 		this._handleInput();
+	}
+
+	wallEyeFireProjectile() {
+		this.wallEyes.forEach(function(wallEye) {
+			let heroInFiringRange = this.hero.x - wallEye.x < 50 && this.hero.y - wallEye.y < 18;
+			
+			if (heroInFiringRange) {
+				wallEye.fireProjectile();
+			}
+		}, this);
 	}
 
 	doubleJump() {
@@ -219,6 +233,7 @@ class Game extends Phaser.State {
 		});
 
 		this.game.physics.arcade.collide(this.robot, this.blockedLayer);
+		this.game.physics.arcade.collide(this.wallEyes, this.blockedLayer);
 		this.game.physics.arcade.collide(this.chests, this.blockedLayer);
 		this.game.physics.arcade.collide(this.platforms, this.blockedLayer);
 		
@@ -232,6 +247,11 @@ class Game extends Phaser.State {
 
 		this.game.physics.arcade.overlap(this.bullets, this.robot, function(bullet, robot) {
 			robot.hit(bullet);
+			bullet.kill();
+		});
+
+		this.game.physics.arcade.overlap(this.bullets, this.wallEyes, function(bullet, wallEye) {
+			wallEye.hit(bullet);
 			bullet.kill();
 		});
 
@@ -251,6 +271,15 @@ class Game extends Phaser.State {
 		this.game.physics.arcade.collide(this.hero, this.robot, function(hero, robot) {
 			hero.hit(robot);
 		});
+
+		this.game.physics.arcade.collide(this.hero, this.wallEyes, function(hero, wallEye) {
+			hero.hit(wallEye);
+		});
+
+		// TODO: Need WallEye projectile collision detection
+		// this.game.physics.arcade.collide(this.hero, this.wallEyes, function(hero, projectile) {
+		// 	hero.hit(projectile);
+		// });
 	}
 
 	_handleInput() {
@@ -333,7 +362,13 @@ class Game extends Phaser.State {
 	_spawnEnemies() {
 		this.robot = this.game.add.group();
 		this.robot.add(new Robot(this.game, 200, 262));
-		this.robot.enableBody = true;	
+		this.robot.enableBody = true;
+
+		this.wallEyes = this.game.add.group();
+		var wallEye1 = new WallEye(this.game, 250, 40);
+		wallEye1.createProjectile();
+		this.wallEyes.add(wallEye1);
+		this.wallEyes.enableBody = true;
 	}
 
 	_spawnChests() {
