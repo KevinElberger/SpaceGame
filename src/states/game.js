@@ -34,7 +34,7 @@ class Game extends Phaser.State {
 	create() {
 		this._createWorld();
 
-		this.game.stage.smoothed = false;
+		this.game.stage.smoothed = true;
 		this.game.renderer.renderSession.roundPixels = true;
 
 		this.cursors = this.game.input.keyboard.createCursorKeys();
@@ -264,6 +264,8 @@ class Game extends Phaser.State {
 
 		this.game.physics.arcade.collide(this.hero, this.platforms, function(hero, platform) {
 			if (hero.body.touching.down || hero.body.blocked.down) {
+				hero.locked = true;
+				platform.locked = true;
 				hero.body.x = platform.body.x;
 			}
 		});
@@ -356,7 +358,7 @@ class Game extends Phaser.State {
 		this.game.physics.enable(this.platforms);
 		var platform1 = new Platform(this.game, 490, 278);
 		this.platforms.add(platform1);
-		let tween = this.game.add.tween(platform1.body).to({x: platform1.body.x+110}, 3000, Phaser.Easing.Out, true,0,loops,true).loop(true);
+		let tween = this.game.add.tween(platform1.body).to({x: platform1.body.x+110}, 2500, Phaser.Easing.Out, true,0,loops,true).loop(true);
 	}
 
 	_spawnEnemies() {
