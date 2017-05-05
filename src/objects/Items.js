@@ -21,11 +21,11 @@ function Chest(game, x, y) {
 Chest.prototype = Object.create(Phaser.Sprite.prototype);
 Chest.prototype.constructor = Chest;
 
-function Platform(game, x, y) {
+function Platform(game, x, y, direction) {
 	Phaser.Sprite.call(this, game, x, y, 'platform');
 	this.game.physics.enable(this, Phaser.Physics.ARCADE);
 	this.anchor.set(0.5, 0.5);
-	this.enableBody = true;
+	this.direction = direction;
 	this.body.collideWorldBounds = true;
 	this.body.allowGravity = false;
 	this.body.immovable = true;

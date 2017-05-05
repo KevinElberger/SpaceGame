@@ -75,6 +75,7 @@ class Game extends Phaser.State {
 		this.updateStarShadowTexture();
 		this._handleCollisions();
 		this._handleInput();
+		this.platforms.forEach(this.movePlatforms, this);
 	}
 
 	wallEyeFireProjectile() {
@@ -352,14 +353,25 @@ class Game extends Phaser.State {
 	}
 
 	_spawnPlatforms() {
-		let loops = Number.MAX_VALUE;
-
 		this.platforms = this.game.add.group();
-		this.game.physics.enable(this.platforms);
-		var platform1 = new Platform(this.game, 490, 278);
-		this.platforms.add(platform1);
-		let tween = this.game.add.tween(platform1.body).to({x: platform1.body.x+110}, 2500, Phaser.Easing.Out, true,0,loops,true).loop(true);
+
+		let platform = new Platform(this.game, 500, 278, 'horizontal');
+		platform.leftbounds = platform.body.x - 30;
+		platform.rightbounds = platform.body.x + 100;
+		this.platforms.add(platform);
+		platform.body.velocity.x = 50;
 	}
+
+	movePlatforms(platform) {
+		if (platform.direction === 'horizontal'){
+			if (platform.body.x > platform.body.sprite.rightbounds) {  
+				platform.body.velocity.x = -1 * platform.body.velocity.x;
+			} else if (platform.body.x < platform.body.sprite.leftbounds) {  
+				platform.body.velocity.x = -1 * platform.body.velocity.x;
+			} 
+		}
+	}
+
 
 	_spawnEnemies() {
 		this.robot = this.game.add.group();
