@@ -17,7 +17,6 @@ class WallEye extends Enemy {
         this.barConfig = {x: this.body.x, y: this.body.y-12, width: this.health * 2, height: 4};
 		this.healthbar = new HealthBar(this.game, this.barConfig);
 
-        this.vision = 40 ;
         this.bulletTime = 0;
     }
 
@@ -28,48 +27,6 @@ class WallEye extends Enemy {
 
 		this.healthbar.bgSprite.x = this.body.x+7;
 		this.healthbar.barSprite.x = this.body.x+2;
-    }
-
-    createProjectile() {
-        this.projectiles = this.game.add.group();
-        this.projectiles.enableBody = true;
-        this.projectiles.physicsBodyType = Phaser.Physics.ARCADE;
-		this.projectiles.setAll('velocity.y', 0);
-
-		for (var i = 0; i < 64; i++) {
-			var b = this.projectiles.create(0, 0, 'eyeProjectile');
-			b.name = 'projectile' + i;
-			b.exists = false;
-			b.visible = false;
-			b.damage = 2;
-			b.checkWorldBounds = true;
-			b.events.onOutOfBounds.add(this.resetProjectiles, this);
-			b.body.allowGravity = false;
-		}
-    }
-
-    fireProjectile() {
-        if (this.dying) {
-            return;
-        }
-
-		if (this.game.time.now > this.bulletTime) {
-			this.projectile = this.projectiles.getFirstExists(false);
-
-			if (this.projectile) {
-				this.projectile.body.velocity.y = 0;
-                this.projectile.reset(this.x-5, this.y-10);
-                this.projectile.body.velocity.x = -100;
-
-				this.bulletTime = this.game.time.now + 1300;
-			}
-		}
-    }
-
-    resetProjectiles() {
-        if (this.projectile) {
-            this.projectile.kill();
-        }
     }
 
     death() {

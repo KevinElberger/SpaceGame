@@ -43,9 +43,12 @@ class Game extends Phaser.State {
 		this.jumpChecker.onDown.add(this.doubleJump, this);
 
 		this._loadLevel();
-
 		this.createBullets();
+		this.createEnemyProjectiles();
+		this.createStarLight();
+	}
 
+	createStarLight() {
 		this.STAR_LIGHT_RADIUS = 50;
 		this.light = this.game.add.group();
 		this.light.add(new Star(this.game, 134, 258));
@@ -68,7 +71,7 @@ class Game extends Phaser.State {
 
 	update() {
 		this.chaseHero();
-		this.wallEyeFireProjectile(); 		
+		this.fireEnemyProjectile(); 		
 		this.lightSprite.reset(this.game.camera.x, this.game.camera.y);
 		this.game.world.bringToTop(this.hero);
 		this.updateShadowTexture();
@@ -78,15 +81,52 @@ class Game extends Phaser.State {
 		this.platforms.forEach(this.movePlatforms, this);
 	}
 
-	wallEyeFireProjectile() {
+	createEnemyProjectiles() {
+		this.projectiles = this.game.add.group();
+        this.projectiles.enableBody = true;
+        this.projectiles.physicsBodyType = Phaser.Physics.ARCADE;
+		this.projectiles.setAll('velocity.y', 0);
+
+		for (var i = 0; i < 30; i++) {
+			var b = this.projectiles.create(0, 0, 'eyeProjectile');
+			b.name = 'projectile' + i;
+			b.exists = false;
+			b.visible = false;
+			b.damage = 2;
+			b.checkWorldBounds = true;
+			b.events.onOutOfBounds.add(this.resetProjectiles, this);
+			b.body.allowGravity = false;
+		}
+	}
+
+	resetProjectiles() {
+        if (this.projectile) {
+            this.projectile.kill();
+        }
+    }
+
+	fireEnemyProjectile() {
 		this.wallEyes.forEach(function(wallEye) {
 			let heroInFiringRange = this.hero.x - wallEye.x < 50 && this.hero.y - wallEye.y < 18;
+
+		    if (wallEye.dying) {
+            	return;
+        	}
 			
-			if (heroInFiringRange) {
-				wallEye.fireProjectile();
+			if (heroInFiringRange && this.game.time.now > wallEye.bulletTime) {
+				this.projectile = this.projectiles.getFirstExists(false);
+
+				if (this.projectile) {
+
+					this.projectile.body.velocity.y = 0;
+					this.projectile.reset(wallEye.x-5, wallEye.y-10);
+					this.projectile.body.velocity.x = -100;
+
+					wallEye.bulletTime = this.game.time.now + 1300;
+				}
 			}
 		}, this);
-	}
+    }
 
 	doubleJump() {
 		if (this.hero.body.touching.down || this.hero.body.blocked.down) {
@@ -152,24 +192,6 @@ class Game extends Phaser.State {
 		}
 	}
 
-	rapidFire() {
-		for (var i = 0; i < 2; i++) {
-			this.bullet = this.bullets.getFirstExists(false);
-
-			if (this.bullet) {
-				this.bullet.body.velocity.y = 0;
-				if (this.hero.body.velocity.x >= 0) {
-					this.bullet.reset(this.hero.x+5, this.hero.y-8);
-					this.bullet.body.velocity.x = 500;
-				} else {
-					this.bullet.reset(this.hero.x-15, this.hero.y-8);
-					this.bullet.body.velocity.x = -500;
-				}
-				this.bulletTime = this.game.time.now + 50;
-			}
-		}
-	}
-
 	resetBullet() {
 		if (this.bullet) {
 			this.bullet.kill();
@@ -221,9 +243,10 @@ class Game extends Phaser.State {
 			this.shadowTexture.dirty = true;
 	}
 
+	// TODO: Extract collision handling into separate file
 	_handleCollisions() {
 		var that = this;
-		this.game.physics.arcade.collide(this.hero, this.blockedLayer);
+
 		this.game.physics.arcade.overlap(this.hero, this.doors, function(hero, door) {
 			if (that.cursors.down.isDown) {
 				hero.body.static = true;
@@ -233,26 +256,15 @@ class Game extends Phaser.State {
 			}
 		});
 
-		this.game.physics.arcade.collide(this.robot, this.blockedLayer);
-		this.game.physics.arcade.collide(this.wallEyes, this.blockedLayer);
-		this.game.physics.arcade.collide(this.chests, this.blockedLayer);
-		this.game.physics.arcade.collide(this.platforms, this.blockedLayer);
+		this.handleBlockedLayerCollisions();
+		this.handleEnemyHitHeroCollisions();
+		this.handleHeroHitEnemyCollisions();
 		
 		this.game.physics.arcade.collide(this.hero, this.chests);
 		this.game.physics.arcade.collide(this.robot, this.chests);
 
 		this.game.physics.arcade.overlap(this.bullets, this.chests, function(bullet, chest) {
 			chest.animations.play('hitLeft');
-			bullet.kill();
-		});
-
-		this.game.physics.arcade.overlap(this.bullets, this.robot, function(bullet, robot) {
-			robot.hit(bullet);
-			bullet.kill();
-		});
-
-		this.game.physics.arcade.overlap(this.bullets, this.wallEyes, function(bullet, wallEye) {
-			wallEye.hit(bullet);
 			bullet.kill();
 		});
 
@@ -271,6 +283,21 @@ class Game extends Phaser.State {
 			}
 		});
 
+		this.game.physics.arcade.collide(this.hero, this.projectiles, function(hero, projectile) {
+			hero.hit(projectile);
+			projectile.kill();
+		});
+	}
+
+	handleBlockedLayerCollisions() {
+		this.game.physics.arcade.collide(this.hero, this.blockedLayer);
+		this.game.physics.arcade.collide(this.robot, this.blockedLayer);
+		this.game.physics.arcade.collide(this.wallEyes, this.blockedLayer);
+		this.game.physics.arcade.collide(this.chests, this.blockedLayer);
+		this.game.physics.arcade.collide(this.platforms, this.blockedLayer);
+	}
+
+	handleEnemyHitHeroCollisions() {
 		this.game.physics.arcade.collide(this.hero, this.robot, function(hero, robot) {
 			hero.hit(robot);
 		});
@@ -278,11 +305,18 @@ class Game extends Phaser.State {
 		this.game.physics.arcade.collide(this.hero, this.wallEyes, function(hero, wallEye) {
 			hero.hit(wallEye);
 		});
+	}
 
-		// TODO: Need WallEye projectile collision detection
-		// this.game.physics.arcade.collide(this.hero, this.wallEyes, function(hero, projectile) {
-		// 	hero.hit(projectile);
-		// });
+	handleHeroHitEnemyCollisions() {
+		this.game.physics.arcade.overlap(this.bullets, this.robot, function(bullet, robot) {
+			robot.hit(bullet);
+			bullet.kill();
+		});
+
+		this.game.physics.arcade.overlap(this.bullets, this.wallEyes, function(bullet, wallEye) {
+			wallEye.hit(bullet);
+			bullet.kill();
+		});
 	}
 
 	_handleInput() {
@@ -380,7 +414,6 @@ class Game extends Phaser.State {
 
 		this.wallEyes = this.game.add.group();
 		var wallEye1 = new WallEye(this.game, 250, 40);
-		wallEye1.createProjectile();
 		this.wallEyes.add(wallEye1);
 		this.wallEyes.enableBody = true;
 	}
