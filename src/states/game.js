@@ -1,6 +1,7 @@
 import Hero from 'objects/Hero'
 import Robot from 'objects/Robot'
 import WallEye from 'objects/WallEye'
+import CollisionHandler from 'objects/CollisionHandler'
 import {Star, Chest, Platform, Door, Item} from 'objects/Items'
 
 class Game extends Phaser.State {
@@ -76,9 +77,19 @@ class Game extends Phaser.State {
 		this.game.world.bringToTop(this.hero);
 		this.updateShadowTexture();
 		this.updateStarShadowTexture();
-		this._handleCollisions();
+		CollisionHandler.handleCollisions(this);
 		this._handleInput();
 		this.platforms.forEach(this.movePlatforms, this);
+	}
+
+	movePlatforms(platform) {
+		if (platform.direction === 'horizontal'){
+			if (platform.body.x > platform.body.sprite.rightbounds) {  
+				platform.body.velocity.x = -1 * platform.body.velocity.x;
+			} else if (platform.body.x < platform.body.sprite.leftbounds) {  
+				platform.body.velocity.x = -1 * platform.body.velocity.x;
+			} 
+		}
 	}
 
 	createEnemyProjectiles() {
@@ -117,11 +128,9 @@ class Game extends Phaser.State {
 				this.projectile = this.projectiles.getFirstExists(false);
 
 				if (this.projectile) {
-
 					this.projectile.body.velocity.y = 0;
 					this.projectile.reset(wallEye.x-5, wallEye.y-10);
 					this.projectile.body.velocity.x = -100;
-
 					wallEye.bulletTime = this.game.time.now + 1300;
 				}
 			}
@@ -243,82 +252,6 @@ class Game extends Phaser.State {
 			this.shadowTexture.dirty = true;
 	}
 
-	// TODO: Extract collision handling into separate file
-	_handleCollisions() {
-		var that = this;
-
-		this.game.physics.arcade.overlap(this.hero, this.doors, function(hero, door) {
-			if (that.cursors.down.isDown) {
-				hero.body.static = true;
-				hero.body.x = door.teleportX;
-				hero.body.y = door.teleportY;
-				hero.body.static = false;
-			}
-		});
-
-		this.handleBlockedLayerCollisions();
-		this.handleEnemyHitHeroCollisions();
-		this.handleHeroHitEnemyCollisions();
-		
-		this.game.physics.arcade.collide(this.hero, this.chests);
-		this.game.physics.arcade.collide(this.robot, this.chests);
-
-		this.game.physics.arcade.overlap(this.bullets, this.chests, function(bullet, chest) {
-			chest.animations.play('hitLeft');
-			bullet.kill();
-		});
-
-		this.game.physics.arcade.overlap(this.hero, this.items, function(hero, item) {
-			if (item.name === "jetpack") {
-				item.animations.play('powerUp');
-				hero.upgrade();
-			}
-		});
-
-		this.game.physics.arcade.collide(this.hero, this.platforms, function(hero, platform) {
-			if (hero.body.touching.down || hero.body.blocked.down) {
-				hero.locked = true;
-				platform.locked = true;
-				hero.body.x = platform.body.x;
-			}
-		});
-
-		this.game.physics.arcade.collide(this.hero, this.projectiles, function(hero, projectile) {
-			hero.hit(projectile);
-			projectile.kill();
-		});
-	}
-
-	handleBlockedLayerCollisions() {
-		this.game.physics.arcade.collide(this.hero, this.blockedLayer);
-		this.game.physics.arcade.collide(this.robot, this.blockedLayer);
-		this.game.physics.arcade.collide(this.wallEyes, this.blockedLayer);
-		this.game.physics.arcade.collide(this.chests, this.blockedLayer);
-		this.game.physics.arcade.collide(this.platforms, this.blockedLayer);
-	}
-
-	handleEnemyHitHeroCollisions() {
-		this.game.physics.arcade.collide(this.hero, this.robot, function(hero, robot) {
-			hero.hit(robot);
-		});
-
-		this.game.physics.arcade.collide(this.hero, this.wallEyes, function(hero, wallEye) {
-			hero.hit(wallEye);
-		});
-	}
-
-	handleHeroHitEnemyCollisions() {
-		this.game.physics.arcade.overlap(this.bullets, this.robot, function(bullet, robot) {
-			robot.hit(bullet);
-			bullet.kill();
-		});
-
-		this.game.physics.arcade.overlap(this.bullets, this.wallEyes, function(bullet, wallEye) {
-			wallEye.hit(bullet);
-			bullet.kill();
-		});
-	}
-
 	_handleInput() {
 		if (this.hero.dying) { return; }
 
@@ -395,17 +328,6 @@ class Game extends Phaser.State {
 		this.platforms.add(platform);
 		platform.body.velocity.x = 50;
 	}
-
-	movePlatforms(platform) {
-		if (platform.direction === 'horizontal'){
-			if (platform.body.x > platform.body.sprite.rightbounds) {  
-				platform.body.velocity.x = -1 * platform.body.velocity.x;
-			} else if (platform.body.x < platform.body.sprite.leftbounds) {  
-				platform.body.velocity.x = -1 * platform.body.velocity.x;
-			} 
-		}
-	}
-
 
 	_spawnEnemies() {
 		this.robot = this.game.add.group();
